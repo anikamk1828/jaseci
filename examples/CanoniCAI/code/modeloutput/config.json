@@ -1,5 +1,5 @@
 {
-  "_name_or_path": "prajjwal1/bert-tiny",
+  "_name_or_path": "dialogue_intent_model",
   "architectures": [
     "BertModel"
   ],

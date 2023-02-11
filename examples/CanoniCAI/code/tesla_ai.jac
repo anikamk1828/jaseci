@@ -1,3 +1,30 @@
+node cai_state {
+    has name;
+    can init_wlk_ctx {
+        new_wlk_ctx = {
+            "intent": null,
+            "entities": {},
+            "prev_state": null,
+            "next_state": null,
+            "respond": false
+        };
+        if ("entities" in visitor.wlk_ctx) {
+            // Carry over extracted entities from previous interaction
+            new_wlk_ctx["entities"] = visitor.wlk_ctx["entities"];
+        }
+        visitor.wlk_ctx = new_wlk_ctx;
+    }
+    can nlu {}
+    can process {
+        if (visitor.wlk_ctx["prev_state"]): visitor.wlk_ctx["respond"] = true;
+        else {
+            visitor.wlk_ctx["next_state"] = net.root();
+            visitor.wlk_ctx["prev_state"] = here;
+        }
+    }
+    can nlg {}
+}
+
 node dialogue_state {
     can bi_enc.infer;
     can tfm_ner.extract_entity;
@@ -24,28 +51,7 @@ node dialogue_state {
         }
     }
 
-    can init_wlk_ctx {
-        new_wlk_ctx = {
-            "intent": null,
-            "entities": {},
-            "prev_state": null,
-            "next_state": null,
-            "respond": false
-        };
-        if ("entities" in visitor.wlk_ctx) {
-            // Carry over extracted entities from previous interaction
-            new_wlk_ctx["entities"] = visitor.wlk_ctx["entities"];
-        }
-        visitor.wlk_ctx = new_wlk_ctx;
-    }
     can nlu {}
-    can process {
-        if (visitor.wlk_ctx["prev_state"]): visitor.wlk_ctx["respond"] = true;
-        else {
-            visitor.wlk_ctx["next_state"] = net.root();
-            visitor.wlk_ctx["prev_state"] = here;
-        }
-    }
     can nlg {}
 }
 
@@ -66,7 +72,7 @@ edge intent_transition {
     has intent;
 }
 
-graph dialogue_system {
+graph tesla_ai {
     has anchor dialogue_root;
     spawn {
         dialogue_root = spawn node::dialogue_root;
@@ -91,7 +97,7 @@ graph dialogue_system {
 
 walker init {
     root {
-        spawn here ++> graph::dialogue_system;
+        spawn here ++> graph::tesla_ai;
         spawn here walker::talk;
     }
 }
@@ -103,7 +109,7 @@ walker talk {
     root {
         take --> node::dialogue_root;
     }
-    dialogue_state {
+    cai_state {
         if (!question) {
             question = std.input("Question (Ctrl-C to exit)> ");
             here::init_wlk_ctx;
