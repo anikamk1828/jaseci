@@ -11,7 +11,7 @@ node dialogue_state {
             candidate_type = "text"
         )[0]["predicted"]["label"];
     }
-
+    
     can extract_entities {
         res = tfm_ner.extract_entity(visitor.question);
         for ent in res {
